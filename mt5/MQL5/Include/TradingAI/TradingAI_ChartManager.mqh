@@ -11,6 +11,13 @@ struct TradingAI_ChartSlot
    datetime last_bar_open_time;
 };
 
+string TradingAI_FormatFileTimestamp(const datetime value)
+{
+   MqlDateTime stamp;
+   TimeToStruct(value, stamp);
+   return StringFormat("%04d-%02d-%02d_%02d-%02d", stamp.year, stamp.mon, stamp.day, stamp.hour, stamp.min);
+}
+
 string TradingAI_ClampScreenshotName(string name)
 {
    const int max_len = 63;
@@ -227,6 +234,48 @@ int TradingAI_TimeframeCaptureIntervalSeconds(const ENUM_TIMEFRAMES timeframe)
 string TradingAI_QuoteFolderName(const string symbol)
 {
    return "TradingAI\\" + symbol;
+}
+
+string TradingAI_ScreenshotRootFolder()
+{
+   return "TradingAI\\screenshots";
+}
+
+string TradingAI_ScreenshotSymbolFolder(const string symbol)
+{
+   return TradingAI_ScreenshotRootFolder() + "\\" + symbol;
+}
+
+string TradingAI_ScreenshotTimeframeFolder(const string symbol, const ENUM_TIMEFRAMES timeframe)
+{
+   return TradingAI_ScreenshotSymbolFolder(symbol) + "\\" + TradingAI_TimeframeToShortName(timeframe);
+}
+
+string TradingAI_ScreenshotRelativeFolder(const string symbol, const ENUM_TIMEFRAMES timeframe)
+{
+   return "screenshots/" + symbol + "/" + TradingAI_TimeframeToShortName(timeframe);
+}
+
+bool TradingAI_EnsureScreenshotFolders(const string symbol)
+{
+   if(!TradingAI_EnsureFolder("TradingAI"))
+      return false;
+
+   if(!TradingAI_EnsureFolder(TradingAI_ScreenshotRootFolder()))
+      return false;
+
+   if(!TradingAI_EnsureFolder(TradingAI_ScreenshotSymbolFolder(symbol)))
+      return false;
+
+   return true;
+}
+
+bool TradingAI_EnsureScreenshotFoldersForTimeframe(const string symbol, const ENUM_TIMEFRAMES timeframe)
+{
+   if(!TradingAI_EnsureScreenshotFolders(symbol))
+      return false;
+
+   return TradingAI_EnsureFolder(TradingAI_ScreenshotTimeframeFolder(symbol, timeframe));
 }
 
 bool TradingAI_ShouldCaptureTimeframeNow(TradingAI_ChartSlot &slot, const datetime now_gmt)

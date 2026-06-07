@@ -83,6 +83,7 @@ struct TradingAI_TradeEvent
 {
    string                event_type;
    string                event_id;
+   string                file_stamp;
    string                symbol;
    string                comment;
    string                screenshots;
@@ -105,6 +106,7 @@ string TradingAI_BuildTradeEventJson(const TradingAI_TradeEvent &event)
    string json = "{";
    json += "\"event_type\":" + TradingAI_JsonString(event.event_type) + ",";
    json += "\"event_id\":" + TradingAI_JsonString(event.event_id) + ",";
+   json += "\"file_stamp\":" + TradingAI_JsonString(event.file_stamp) + ",";
    json += "\"symbol\":" + TradingAI_JsonString(event.symbol) + ",";
    json += "\"comment\":" + TradingAI_JsonString(event.comment) + ",";
    json += "\"screenshots\":" + TradingAI_JsonString(event.screenshots) + ",";

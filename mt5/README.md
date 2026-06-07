@@ -26,7 +26,7 @@ This folder contains the first MT5 component of the trading AI system: a small E
 - Screenshot layer:
   - Opens or reuses charts for the configured symbols and core timeframes, including `M1`
   - Captures PNG screenshots for each time snapshot and trade event
-  - Writes per-symbol PNG files into `MQL5/Files/TradingAI/<symbol>/`
+  - Writes PNG files into `MQL5/Files/TradingAI/screenshots/<symbol>/<tf>/`
   - Time snapshot filenames are minute-based, not second-based
   - Stores screenshot filenames in the JSON logs
 - Trade logger:

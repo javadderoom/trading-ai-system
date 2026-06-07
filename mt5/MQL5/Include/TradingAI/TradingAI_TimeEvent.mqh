@@ -7,6 +7,7 @@ struct TradingAI_TimeEvent
 {
    string event_type;
    string snapshot_id;
+   string file_stamp;
    string symbol;
    string time_utc;
    string screenshots;
@@ -43,6 +44,7 @@ string TradingAI_BuildTimeEventJson(const TradingAI_TimeEvent &event)
    string json = "{";
    json += "\"event_type\":" + TradingAI_JsonString(event.event_type) + ",";
    json += "\"snapshot_id\":" + TradingAI_JsonString(event.snapshot_id) + ",";
+   json += "\"file_stamp\":" + TradingAI_JsonString(event.file_stamp) + ",";
    json += "\"symbol\":" + TradingAI_JsonString(event.symbol) + ",";
    json += "\"time_utc\":" + TradingAI_JsonString(event.time_utc) + ",";
    json += "\"screenshots\":" + TradingAI_JsonString(event.screenshots) + ",";
@@ -80,6 +82,7 @@ bool TradingAI_BuildTimeEvent(const string symbol, TradingAI_TimeEvent &event)
 
    event.symbol = symbol;
    event.event_type = "time_snapshot";
+   event.file_stamp = TradingAI_FormatFileTimestamp(now_time);
    event.time_utc = TimeToString(now_time, TIME_DATE | TIME_SECONDS);
    event.snapshot_id = symbol + "_" + TradingAI_FormatCompactTime(now_time);
    event.digits = digits > 0 ? digits : 8;

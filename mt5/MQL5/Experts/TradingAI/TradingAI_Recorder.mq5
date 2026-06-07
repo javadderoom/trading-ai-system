@@ -172,7 +172,7 @@ void LogTimeSnapshots()
       }
 
       if(InpEnableTimeScreenshots)
-         TradingAI_CaptureDueScreenshotsForSymbol(symbol, "TS", event.snapshot_id, InpScreenshotWidth, InpScreenshotHeight, event.screenshots, g_chart_slots);
+         TradingAI_CaptureDueScreenshotsForSymbol(symbol, "TS", event.file_stamp, InpScreenshotWidth, InpScreenshotHeight, event.screenshots, g_chart_slots);
 
       if(InpEnableTimeLogger)
       {
@@ -233,6 +233,7 @@ bool BuildTradeEventFromDeal(const ulong deal_ticket, TradingAI_TradeEvent &even
    event.phase = TradingAI_TradePhaseToString(phase);
    event.deal_type = TradingAI_DealTypeToString(deal_type);
    event.deal_entry = TradingAI_DealEntryToString(deal_entry);
+   event.file_stamp = "trade_" + StringFormat("%I64u", deal_ticket) + "_" + TradingAI_FormatFileTimestamp(deal_time);
    event.time_utc = TimeToString(deal_time, TIME_DATE | TIME_SECONDS);
    event.deal_ticket = (long)deal_ticket;
    event.order_ticket = (long)HistoryDealGetInteger(deal_ticket, DEAL_ORDER);
@@ -258,7 +259,7 @@ void LogTradeDeal(const ulong deal_ticket)
    }
 
    if(g_session_started && InpEnableTradeScreenshots)
-      TradingAI_CaptureScreenshotsForSymbol(event.symbol, "TR", event.event_id, InpScreenshotWidth, InpScreenshotHeight, event.screenshots, g_chart_slots);
+      TradingAI_CaptureScreenshotsForSymbol(event.symbol, "TR", event.file_stamp, InpScreenshotWidth, InpScreenshotHeight, event.screenshots, g_chart_slots);
 
    if(InpEnableTradeLogger)
    {

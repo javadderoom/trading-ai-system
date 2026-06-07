@@ -6,42 +6,20 @@
 string TradingAI_BuildScreenshotName(const string prefix,
                                      const string symbol,
                                      const ENUM_TIMEFRAMES timeframe,
-                                     const string event_tag)
+                                     const string event_tag,
+                                     const bool include_symbol = false)
 {
-   string compact_tag = event_tag;
-   int last_separator = StringFind(event_tag, "_", 0);
-   while(last_separator >= 0)
+   string file_stamp = event_tag;
+   string file_name = "";
+
+   if(prefix == "TR")
    {
-      int next_separator = StringFind(event_tag, "_", last_separator + 1);
-      if(next_separator < 0)
-         break;
-      last_separator = next_separator;
+      file_name = StringFormat("%s_%s.png", prefix, file_stamp);
    }
-
-   if(last_separator >= 0 && last_separator + 1 < StringLen(event_tag))
-      compact_tag = StringSubstr(event_tag, last_separator + 1);
-
-   if(prefix == "TS" && StringLen(compact_tag) == 6)
+   else
    {
-      bool all_digits = true;
-      for(int i = 0; i < 6; i++)
-      {
-         int ch = StringGetCharacter(compact_tag, i);
-         if(ch < '0' || ch > '9')
-         {
-            all_digits = false;
-            break;
-         }
-      }
-
-      if(all_digits)
-         compact_tag = StringSubstr(compact_tag, 0, 4);
+      file_name = StringFormat("%s.png", file_stamp);
    }
-
-   string file_name = StringFormat("%s_%s_%s.png",
-                                   prefix,
-                                   TradingAI_TimeframeToShortName(timeframe),
-                                   compact_tag);
 
    return TradingAI_ClampScreenshotName(file_name);
 }
@@ -51,16 +29,13 @@ string TradingAI_BuildScreenshotPath(const string symbol,
                                      const string prefix,
                                      const string event_tag)
 {
-   return TradingAI_QuoteFolderName(symbol) + "\\" +
+   return TradingAI_ScreenshotTimeframeFolder(symbol, timeframe) + "\\" +
           TradingAI_BuildScreenshotName(prefix, symbol, timeframe, event_tag);
 }
 
 bool TradingAI_EnsureScreenshotFolderForSymbol(const string symbol)
 {
-   if(!TradingAI_EnsureFolder("TradingAI"))
-      return false;
-
-   return TradingAI_EnsureFolder(TradingAI_QuoteFolderName(symbol));
+   return TradingAI_EnsureScreenshotFolders(symbol);
 }
 
 bool TradingAI_CaptureChartScreenshot(const long chart_id,
@@ -95,7 +70,7 @@ bool TradingAI_CaptureScreenshotsForSymbol(const string symbol,
    if(!TradingAI_EnsureManagedChartsForSymbol(symbol, slots))
       return false;
 
-   if(!TradingAI_EnsureScreenshotFolderForSymbol(symbol))
+   if(!TradingAI_EnsureScreenshotFolders(symbol))
       return false;
 
    for(int index = 0; index < 6; index++)
@@ -104,12 +79,16 @@ bool TradingAI_CaptureScreenshotsForSymbol(const string symbol,
       if(!TradingAI_GetManagedChartId(symbol, timeframes[index], slots, chart_id))
          continue;
 
+      if(!TradingAI_EnsureScreenshotFoldersForTimeframe(symbol, timeframes[index]))
+         continue;
+
       string file_path = TradingAI_BuildScreenshotPath(symbol, timeframes[index], prefix, event_tag);
       if(TradingAI_CaptureChartScreenshot(chart_id, file_path, width, height))
       {
          if(manifest != "")
             manifest += "|";
-         manifest += file_path;
+         manifest += TradingAI_ScreenshotRelativeFolder(symbol, timeframes[index]) + "/" +
+                     TradingAI_BuildScreenshotName(prefix, symbol, timeframes[index], event_tag);
       }
    }
 
@@ -130,7 +109,7 @@ bool TradingAI_CaptureDueScreenshotsForSymbol(const string symbol,
    if(!TradingAI_EnsureManagedChartsForSymbol(symbol, slots))
       return false;
 
-   if(!TradingAI_EnsureScreenshotFolderForSymbol(symbol))
+   if(!TradingAI_EnsureScreenshotFolders(symbol))
       return false;
 
    datetime now_gmt = TimeGMT();
@@ -144,13 +123,17 @@ bool TradingAI_CaptureDueScreenshotsForSymbol(const string symbol,
       if(!TradingAI_ShouldCaptureTimeframeNow(slots[slot_index], now_gmt))
          continue;
 
+      if(!TradingAI_EnsureScreenshotFoldersForTimeframe(symbol, timeframes[index]))
+         continue;
+
       long chart_id = slots[slot_index].chart_id;
       string file_path = TradingAI_BuildScreenshotPath(symbol, timeframes[index], prefix, event_tag);
       if(TradingAI_CaptureChartScreenshot(chart_id, file_path, width, height))
       {
          if(manifest != "")
             manifest += "|";
-         manifest += file_path;
+         manifest += TradingAI_ScreenshotRelativeFolder(symbol, timeframes[index]) + "/" +
+                     TradingAI_BuildScreenshotName(prefix, symbol, timeframes[index], event_tag);
       }
    }
 

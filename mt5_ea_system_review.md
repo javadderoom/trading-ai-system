@@ -24,7 +24,7 @@ EA detects:
 EA writes:
 - time JSONL logs
 - trade JSONL logs
-- per-symbol screenshot files
+- per-symbol / per-timeframe screenshot files
         ↓
 Stored in:
 `MQL5/Files/TradingAI/`
@@ -75,7 +75,7 @@ Output file:
 The EA opens or reuses charts and captures screenshots into per-symbol folders.
 
 Folder layout:
-`MQL5/Files/TradingAI/<symbol>/`
+`MQL5/Files/TradingAI/screenshots/<symbol>/<tf>/`
 
 Screenshot behavior:
 - time snapshots capture chart images for configured timeframes

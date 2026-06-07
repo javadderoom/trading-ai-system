@@ -104,8 +104,8 @@ Current screenshot / chart support:
 - `D1`
 
 Current timing behavior:
-- `M1` screenshots: every 1 minute on candle open
-- `M5` screenshots: every 5 minutes on candle open
+- `M1` screenshots: candle-open driven, effectively every 1 minute
+- `M5` screenshots: candle-open driven, effectively every 5 minutes
 - `M15` screenshots: about every 5 minutes
 - `H1` screenshots: about every 15 minutes
 - `H4` screenshots: about every 60 minutes
@@ -212,4 +212,3 @@ Python dataset builder:
 - matches screenshots to time and trade events
 - builds training records
 - prepares AI-ready inputs
-

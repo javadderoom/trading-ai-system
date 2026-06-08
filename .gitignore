@@ -219,3 +219,6 @@ __marimo__/
 
 # TradingAI generated screenshots
 screenshots/
+
+# TradingAI synced log data
+data/

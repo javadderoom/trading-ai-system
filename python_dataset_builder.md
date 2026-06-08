@@ -20,22 +20,16 @@ From the MT5 EA:
 
 ## Main Scripts
 
-### 1. File Watcher
+All scripts live under `python/` and are run from the repo root.
 
-Continuously watches the MT5 output folder and detects:
-- new JSONL lines
-- new screenshot files
+### 1. File Sync / Watcher
 
-Responsibilities:
-- track new files safely
-- avoid duplicate processing
-- keep an index of processed records
+Two scripts mirror MT5 output into the repo:
 
-Helper script:
-- `python/sync_mt5_screenshots.py` mirrors MT5 screenshot files into the repo `screenshots/` folder
-- use `--source` or `TRADINGAI_MT5_SCREENSHOT_ROOT` to point at the MT5 data folder
-- `python/tradingai_sync_config.json` can store the default source, destination, and watch interval
-- the sync helper deletes source screenshots after a successful copy by default
+- **`python/sync_mt5_logs.py`** — syncs both JSONL logs and screenshots from the MT5 `TradingAI/` folder into `data/` and `screenshots/`. Supports `--watch` mode with configurable interval.
+- **`python/sync_mt5_screenshots.py`** — syncs only PNG screenshot files. Supports `--watch` mode.
+
+Both scripts read defaults from `python/tradingai_sync_config.json` and respect the `--source`, `--dest`, and `TRADINGAI_MT5_ROOT` / `TRADINGAI_MT5_SCREENSHOT_ROOT` env vars. Source files are deleted after successful copy by default.
 
 ### 2. Trade Parser
 
@@ -96,27 +90,39 @@ Example structured record:
 
 ---
 
-## Suggested Folder Layout
+## Folder Layout
 
 ```text
 python/
-  watcher.py
-  parser.py
-  linker.py
-  dataset_builder.py
-  config.py
-  models.py
-  sync_mt5_screenshots.py
+  __init__.py
+  models.py              # data classes: TimeEvent, TradeEvent, TradeRecord, TrainingSample
+  parser.py              # loads JSONL logs, groups deals into TradeRecords
+  linker.py              # validates screenshots, finds pre/post context snapshots
+  dataset_builder.py     # combines trades + screenshots into pandas DataFrame, exports CSV + Parquet
+  sync_mt5_logs.py       # watches & mirrors MT5 logs + screenshots into repo
+  sync_mt5_screenshots.py  # watches & mirrors MT5 PNG files only
+  tradingai_sync_config.json  # default source/dest paths, watch interval
+  requirements.txt       # pandas, pyarrow
 
-screenshots/
+data/                    # mirrored JSONL logs land here
+  time_events_YYYYMMDD.jsonl
+  trade_events_YYYYMMDD.jsonl
+
+screenshots/             # mirrored screenshots land here (6 timeframes per symbol)
   XAUUSD/
+    M1/
     M5/
     M15/
     H1/
+    H4/
+    D1/
   XAGUSD/
+    M1/
     M5/
     M15/
     H1/
+    H4/
+    D1/
 ```
 
 ---
@@ -131,10 +137,15 @@ screenshots/
 
 ---
 
-## Next Step
+## Status
 
-Implement the Python pipeline in small pieces:
-- watcher first
-- parser second
-- linker third
-- dataset builder last
+All Python scripts are implemented:
+- `sync_mt5_logs.py` / `sync_mt5_screenshots.py` — file sync with watch mode
+- `parser.py` — loads JSONL, groups deals into trade records with win/loss/RR
+- `linker.py` — validates screenshots, attaches pre/post context snapshots
+- `dataset_builder.py` — builds CSV + Parquet dataset from parsed data
+
+Run the full pipeline:
+```bash
+python python/dataset_builder.py --data-dir data --screenshots-dir screenshots --output dataset
+```

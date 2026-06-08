@@ -54,6 +54,8 @@ def build_dataset(
     hours_before: float = 1.0,
     hours_after: float = 1.0,
     missing_ok: bool = False,
+    *,
+    write_outputs: bool = True,
 ) -> pd.DataFrame:
     print(f"loading time events from {data_dir} ...")
     time_events = load_time_events(data_dir)
@@ -87,6 +89,9 @@ def build_dataset(
     df = samples_to_dataframe(samples)
     print(f"  built {len(df)} training sample(s)")
 
+    if not write_outputs:
+        return df
+
     output.mkdir(parents=True, exist_ok=True)
 
     csv_path = output / "tradingai_dataset.csv"
@@ -100,7 +105,42 @@ def build_dataset(
     return df
 
 
+def merge_datasets(existing_df: pd.DataFrame, new_df: pd.DataFrame) -> tuple[pd.DataFrame, int, int]:
+    """Merge new trades into existing dataset.
+
+    Dedupe key: position_ticket
+    Prefer newest values from new_df.
+    """
+    if existing_df is None or existing_df.empty:
+        merged = new_df
+        return merged, len(new_df), 0
+
+    if new_df is None or new_df.empty:
+        return existing_df, 0, len(existing_df)
+
+    if "position_ticket" not in existing_df.columns or "position_ticket" not in new_df.columns:
+        raise ValueError("Both existing_df and new_df must contain 'position_ticket' column")
+
+    existing_df = existing_df.copy()
+    new_df = new_df.copy()
+
+    # Identify duplicates against existing.
+    existing_keys = set(existing_df["position_ticket"].tolist())
+    duplicate_count = sum(1 for k in new_df["position_ticket"].tolist() if k in existing_keys)
+    new_unique_count = len(new_df) - duplicate_count
+
+    merged = pd.concat([existing_df, new_df], ignore_index=True)
+
+    # Keep last occurrence per position_ticket (so new_df wins).
+    merged = merged.drop_duplicates(subset=["position_ticket"], keep="last")
+
+    # Return: total merged rows, unique new rows added, duplicate rows updated.
+    merged_count = len(merged)
+    return merged, new_unique_count, duplicate_count
+
+
 def main() -> int:
+
     parser = argparse.ArgumentParser(description="Build AI-ready dataset from MT5 TradingAI data.")
     parser.add_argument("--data-dir", type=Path, default=Path("data"), help="Path to JSONL log directory")
     parser.add_argument("--screenshots-dir", type=Path, default=Path("screenshots"), help="Path to screenshots directory")
@@ -108,17 +148,88 @@ def main() -> int:
     parser.add_argument("--hours-before", type=float, default=1.0, help="Hours of pre-entry context to include")
     parser.add_argument("--hours-after", type=float, default=1.0, help="Hours of post-exit context to include")
     parser.add_argument("--missing-ok", action="store_true", help="Don't warn about missing screenshots")
-    args = parser.parse_args()
 
-    build_dataset(
+    # Default to incremental.
+    parser.add_argument("--incremental", action="store_true", help="Merge new trades into existing dataset (default)")
+    parser.add_argument("--no-incremental", action="store_true", help="Rebuild dataset from scratch and overwrite")
+
+    args = parser.parse_args()
+    incremental = bool(args.incremental) and not bool(args.no_incremental)
+    # If user didn't pass either flag, default incremental=true.
+    if not args.incremental and not args.no_incremental:
+        incremental = True
+
+    output_dir = args.output
+    parquet_path = output_dir / "tradingai_dataset.parquet"
+    csv_path = output_dir / "tradingai_dataset.csv"
+
+    if not incremental:
+        # Full rebuild.
+        build_dataset(
+            data_dir=args.data_dir,
+            screenshots_dir=args.screenshots_dir,
+            output=output_dir,
+            hours_before=args.hours_before,
+            hours_after=args.hours_after,
+            missing_ok=args.missing_ok,
+            write_outputs=True,
+        )
+        return 0
+
+    # Incremental mode:
+    # 1) Build new_df in-memory without overwriting existing outputs.
+    new_df = build_dataset(
         data_dir=args.data_dir,
         screenshots_dir=args.screenshots_dir,
-        output=args.output,
+        output=output_dir,
         hours_before=args.hours_before,
         hours_after=args.hours_after,
         missing_ok=args.missing_ok,
+        write_outputs=False,
     )
+
+    # 2) Load existing dataset (prefer parquet).
+    existing_df: Optional[pd.DataFrame] = None
+    if parquet_path.exists():
+        print(f"incremental: loading existing parquet from {parquet_path} ...")
+        existing_df = pd.read_parquet(parquet_path)
+    elif csv_path.exists():
+        print(f"incremental: loading existing csv from {csv_path} ...")
+        existing_df = pd.read_csv(csv_path)
+
+        # CSV parsing yields entry/exit time as strings; parse back to datetime for downstream consistency.
+        for col in ("entry_time", "exit_time"):
+            if col in existing_df.columns:
+                existing_df[col] = pd.to_datetime(existing_df[col], errors="coerce")
+    else:
+        print("incremental: no existing dataset found; writing newly built dataset")
+        output_dir.mkdir(parents=True, exist_ok=True)
+        new_df.to_csv(csv_path, index=False)
+        new_df.to_parquet(parquet_path, index=False)
+        print(f"  wrote {csv_path}")
+        print(f"  wrote {parquet_path}")
+        return 0
+
+    # 3) Merge new rows on position_ticket; newest values in new_df win.
+    merged_df, new_unique_count, duplicate_count = merge_datasets(existing_df, new_df)
+
+    print("incremental: merge summary")
+    print(f"  existing rows: {len(existing_df)}")
+    print(f"  new rows built: {len(new_df)}")
+    print(f"  duplicates updated: {duplicate_count}")
+    print(f"  unique new rows added: {new_unique_count}")
+    print(f"  merged total rows: {len(merged_df)}")
+
+    # 4) Write merged back to final outputs.
+    output_dir.mkdir(parents=True, exist_ok=True)
+    merged_df.to_csv(csv_path, index=False)
+    print(f"  wrote {csv_path}")
+
+    merged_df.to_parquet(parquet_path, index=False)
+    print(f"  wrote {parquet_path}")
+
     return 0
+
 
 
 if __name__ == "__main__":

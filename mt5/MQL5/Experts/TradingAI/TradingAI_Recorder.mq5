@@ -243,6 +243,8 @@ bool BuildTradeEventFromDeal(const ulong deal_ticket, TradingAI_TradeEvent &even
    event.price_digits = symbol_digits;
    event.volume = HistoryDealGetDouble(deal_ticket, DEAL_VOLUME);
    event.profit = HistoryDealGetDouble(deal_ticket, DEAL_PROFIT);
+   event.sl = HistoryDealGetDouble(deal_ticket, DEAL_SL);
+   event.tp = HistoryDealGetDouble(deal_ticket, DEAL_TP);
 
    return true;
 }

@@ -22,7 +22,7 @@ def is_png(path: Path) -> bool:
     return path.is_file() and path.suffix.lower() == ".png"
 
 
-def sync_once(source_root: Path, dest_root: Path) -> int:
+def sync_once(source_root: Path, dest_root: Path, delete_source_after_copy: bool) -> int:
     copied = 0
 
     if not source_root.exists():
@@ -44,8 +44,11 @@ def sync_once(source_root: Path, dest_root: Path) -> int:
                 continue
 
         shutil.copy2(src, dest)
+        if delete_source_after_copy:
+            src.unlink()
         copied += 1
-        print(f"copied {rel_path.as_posix()}")
+        action = "moved" if delete_source_after_copy else "copied"
+        print(f"{action} {rel_path.as_posix()}")
 
     return copied
 
@@ -114,17 +117,19 @@ def main() -> int:
     if interval is None:
         interval = 5.0
 
+    delete_source_after_copy = bool(config.get("delete_source_after_copy", True))
+
     dest_root.mkdir(parents=True, exist_ok=True)
 
     if not args.watch:
-        copied = sync_once(source_root, dest_root)
-        print(f"done, copied {copied} file(s)")
+        copied = sync_once(source_root, dest_root, delete_source_after_copy)
+        print(f"done, processed {copied} file(s)")
         return 0
 
     print(f"watching {source_root} -> {dest_root}")
     try:
         while True:
-            copied = sync_once(source_root, dest_root)
+            copied = sync_once(source_root, dest_root, delete_source_after_copy)
             if copied:
                 print(f"synced {copied} file(s)")
             time.sleep(interval)

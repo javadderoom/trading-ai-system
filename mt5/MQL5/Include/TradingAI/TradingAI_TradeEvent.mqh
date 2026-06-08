@@ -99,6 +99,8 @@ struct TradingAI_TradeEvent
    int                   price_digits;
    double                volume;
    double                profit;
+   double                sl;
+   double                tp;
 };
 
 string TradingAI_BuildTradeEventJson(const TradingAI_TradeEvent &event)
@@ -120,7 +122,9 @@ string TradingAI_BuildTradeEventJson(const TradingAI_TradeEvent &event)
    json += "\"magic\":" + StringFormat("%I64d", event.magic) + ",";
    json += "\"price\":" + DoubleToString(event.price, event.price_digits) + ",";
    json += "\"volume\":" + DoubleToString(event.volume, 2) + ",";
-   json += "\"profit\":" + DoubleToString(event.profit, 2);
+   json += "\"profit\":" + DoubleToString(event.profit, 2) + ",";
+   json += "\"sl\":" + DoubleToString(event.sl, event.price_digits) + ",";
+   json += "\"tp\":" + DoubleToString(event.tp, event.price_digits);
    json += "}";
    return json;
 }

@@ -1,5 +1,6 @@
 {
-  "source_root": "C:\\Users\\Javad\\AppData\\Roaming\\MetaQuotes\\Terminal\\065434634B76DD288A1DDF20131E8DDB\\MQL5\\Files\\TradingAI\\screenshots",
-  "dest_root": "D:\\Code\\trading-ai-system\\screenshots",
-  "watch_interval": 5
+  "mt5_root": "C:\\Users\\Javad\\AppData\\Roaming\\MetaQuotes\\Terminal\\A19DFEF1E80BEC73AB07B83E44201DC0\\MQL5\\Files\\TradingAI",
+  "dest_root": "D:\\Code\\trading-ai-system",
+  "watch_interval": 5,
+  "delete_source_after_copy": true
 }

@@ -35,6 +35,7 @@ Helper script:
 - `python/sync_mt5_screenshots.py` mirrors MT5 screenshot files into the repo `screenshots/` folder
 - use `--source` or `TRADINGAI_MT5_SCREENSHOT_ROOT` to point at the MT5 data folder
 - `python/tradingai_sync_config.json` can store the default source, destination, and watch interval
+- the sync helper deletes source screenshots after a successful copy by default
 
 ### 2. Trade Parser
 

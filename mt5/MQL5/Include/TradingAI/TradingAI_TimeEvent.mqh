@@ -47,7 +47,8 @@ string TradingAI_BuildTimeEventJson(const TradingAI_TimeEvent &event)
    json += "\"file_stamp\":" + TradingAI_JsonString(event.file_stamp) + ",";
    json += "\"symbol\":" + TradingAI_JsonString(event.symbol) + ",";
    json += "\"time_utc\":" + TradingAI_JsonString(event.time_utc) + ",";
-   json += "\"screenshots\":" + TradingAI_JsonString(event.screenshots) + ",";
+    json += "\"screenshots\":" + TradingAI_JsonString(event.screenshots) + ",";
+   json += "\"digits\":" + IntegerToString(event.digits) + ",";
    json += "\"bid\":" + DoubleToString(event.bid, event.digits) + ",";
    json += "\"ask\":" + DoubleToString(event.ask, event.digits) + ",";
    json += "\"spread_points\":" + StringFormat("%I64d", event.spread_points) + ",";

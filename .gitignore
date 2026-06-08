@@ -222,3 +222,6 @@ screenshots/
 
 # TradingAI synced log data
 data/
+
+# TradingAI generated dataset output
+dataset/

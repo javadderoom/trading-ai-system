@@ -29,6 +29,8 @@ def load_time_events(data_dir: Path) -> list[TimeEvent]:
             if not line:
                 continue
             data = json.loads(line)
+            if data.get("event_type") != "time_snapshot":
+                continue
             events.append(TimeEvent(**data))
     return events
 

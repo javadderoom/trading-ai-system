@@ -120,6 +120,7 @@ string TradingAI_BuildTradeEventJson(const TradingAI_TradeEvent &event)
    json += "\"order_ticket\":" + StringFormat("%I64d", event.order_ticket) + ",";
    json += "\"position_ticket\":" + StringFormat("%I64d", event.position_ticket) + ",";
    json += "\"magic\":" + StringFormat("%I64d", event.magic) + ",";
+   json += "\"price_digits\":" + IntegerToString(event.price_digits) + ",";
    json += "\"price\":" + DoubleToString(event.price, event.price_digits) + ",";
    json += "\"volume\":" + DoubleToString(event.volume, 2) + ",";
    json += "\"profit\":" + DoubleToString(event.profit, 2) + ",";

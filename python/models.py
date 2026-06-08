@@ -13,7 +13,6 @@ class TimeEvent:
     symbol: str
     time_utc: str
     screenshots: str
-    digits: int
     bid: float
     ask: float
     spread_points: int
@@ -23,6 +22,7 @@ class TimeEvent:
     bar_h1: str
     bar_h4: str
     bar_d1: str
+    digits: int = 5
 
     @property
     def dt(self) -> datetime:
@@ -46,9 +46,9 @@ class TradeEvent:
     position_ticket: int
     magic: int
     price: float
-    price_digits: int
     volume: float
     profit: float
+    price_digits: int = 5
     sl: float = 0.0
     tp: float = 0.0
 

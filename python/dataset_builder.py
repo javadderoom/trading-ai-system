@@ -138,7 +138,26 @@ def merge_datasets(existing_df: pd.DataFrame, new_df: pd.DataFrame) -> tuple[pd.
     merged_count = len(merged)
     return merged, new_unique_count, duplicate_count
 
-
+def prepare_for_parquet(df: pd.DataFrame) -> pd.DataFrame:
+    """Prepare dataframe for parquet export - fixes all type issues."""
+    df = df.copy()
+    
+    # Fix position_ticket - ensure it's string
+    if "position_ticket" in df.columns:
+        df["position_ticket"] = df["position_ticket"].astype(str)
+    
+    # Fix datetime columns
+    for col in ["entry_time", "exit_time"]:
+        if col in df.columns:
+            df[col] = pd.to_datetime(df[col], errors='coerce')
+    
+    # Fix numeric columns
+    numeric_cols = ["entry_price", "exit_price", "volume", "profit", "sl", "tp", "rr", "duration_minutes"]
+    for col in numeric_cols:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors='coerce')
+    
+    return df
 def main() -> int:
 
     parser = argparse.ArgumentParser(description="Build AI-ready dataset from MT5 TradingAI data.")
@@ -220,6 +239,8 @@ def main() -> int:
     print(f"  unique new rows added: {new_unique_count}")
     print(f"  merged total rows: {len(merged_df)}")
 
+    # 3.5) Clean dataframe before saving
+    merged_df = prepare_for_parquet(merged_df)
     # 4) Write merged back to final outputs.
     output_dir.mkdir(parents=True, exist_ok=True)
     merged_df.to_csv(csv_path, index=False)
